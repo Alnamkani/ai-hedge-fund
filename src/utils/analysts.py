@@ -10,14 +10,12 @@ from src.agents.fundamentals import fundamentals_analyst_agent
 from src.agents.michael_burry import michael_burry_agent
 from src.agents.phil_fisher import phil_fisher_agent
 from src.agents.peter_lynch import peter_lynch_agent
-from src.agents.sentiment import sentiment_analyst_agent
 from src.agents.stanley_druckenmiller import stanley_druckenmiller_agent
 from src.agents.technicals import technical_analyst_agent
 from src.agents.valuation import valuation_analyst_agent
 from src.agents.warren_buffett import warren_buffett_agent
 from src.agents.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
 from src.agents.mohnish_pabrai import mohnish_pabrai_agent
-from src.agents.news_sentiment import news_sentiment_agent
 from src.agents.growth_agent import growth_analyst_agent
 
 # Define analyst configuration - single source of truth
@@ -142,22 +140,8 @@ ANALYST_CONFIG = {
         "type": "analyst",
         "order": 13,
     },
-    "news_sentiment_analyst": {
-        "display_name": "News Sentiment Analyst",
-        "description": "News Sentiment Specialist",
-        "investing_style": "Analyzes news sentiment to predict market movements and identify opportunities through news analysis.",
-        "agent_func": news_sentiment_agent,
-        "type": "analyst",
-        "order": 14,
-    },
-    "sentiment_analyst": {
-        "display_name": "Sentiment Analyst",
-        "description": "Market Sentiment Specialist",
-        "investing_style": "Gauges market sentiment and investor behavior to predict market movements and identify opportunities through behavioral analysis.",
-        "agent_func": sentiment_analyst_agent,
-        "type": "analyst",
-        "order": 15,
-    },
+    # "news_sentiment_analyst" and "sentiment_analyst" disabled:
+    # no insider trade or news data available for Saudi market (Tadawul)
     "valuation_analyst": {
         "display_name": "Valuation Analyst",
         "description": "Company Valuation Specialist",
