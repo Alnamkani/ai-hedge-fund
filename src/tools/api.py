@@ -256,12 +256,22 @@ def search_line_items(
     if not all_statements:
         return []
 
-    ref_df = next(iter(all_statements.values()))
-    report_dates = sorted(ref_df.columns, reverse=True)
+    all_dates = set()
+    for stmt_df in all_statements.values():
+        all_dates.update(stmt_df.columns)
+    report_dates = sorted(all_dates, reverse=True)
 
     end_dt = pd.Timestamp(end_date)
     report_dates = [d for d in report_dates if pd.Timestamp(d) <= end_dt]
     report_dates = report_dates[:limit]
+
+    def _safe_loc(stmt_df: pd.DataFrame, row_key: str, col_key) -> float | None:
+        if row_key not in stmt_df.index or col_key not in stmt_df.columns:
+            return None
+        val = stmt_df.loc[row_key, col_key]
+        if pd.notna(val):
+            return float(val)
+        return None
 
     results = []
     for report_date in report_dates:
@@ -271,33 +281,28 @@ def search_line_items(
 
             if item_name in _YF_LINE_ITEM_MAP:
                 yf_key = _YF_LINE_ITEM_MAP[item_name]
-                if "financials" in all_statements and yf_key in all_statements["financials"].index:
-                    val = all_statements["financials"].loc[yf_key, report_date]
-                    if pd.notna(val):
-                        value = float(val)
+                if "financials" in all_statements:
+                    value = _safe_loc(all_statements["financials"], yf_key, report_date)
 
             if value is None and item_name in _YF_BS_MAP:
                 yf_key = _YF_BS_MAP[item_name]
-                if "balance" in all_statements and yf_key in all_statements["balance"].index:
-                    val = all_statements["balance"].loc[yf_key, report_date]
-                    if pd.notna(val):
-                        value = float(val)
+                if "balance" in all_statements:
+                    value = _safe_loc(all_statements["balance"], yf_key, report_date)
 
             if value is None and item_name in _YF_CF_MAP:
                 yf_key = _YF_CF_MAP[item_name]
-                if "cashflow" in all_statements and yf_key in all_statements["cashflow"].index:
-                    val = all_statements["cashflow"].loc[yf_key, report_date]
-                    if pd.notna(val):
-                        value = float(val)
+                if "cashflow" in all_statements:
+                    value = _safe_loc(all_statements["cashflow"], yf_key, report_date)
 
             if value is None:
                 for stmt_name, stmt_df in all_statements.items():
+                    if report_date not in stmt_df.columns:
+                        continue
                     for idx_name in stmt_df.index:
                         normalized = idx_name.lower().replace(" ", "_")
                         if normalized == item_name or item_name in normalized:
-                            val = stmt_df.loc[idx_name, report_date]
-                            if pd.notna(val):
-                                value = float(val)
+                            value = _safe_loc(stmt_df, idx_name, report_date)
+                            if value is not None:
                                 break
                     if value is not None:
                         break
