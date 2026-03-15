@@ -16,6 +16,7 @@ from src.utils.progress import progress
 from src.utils.llm import call_llm
 import statistics
 from src.utils.api_key import get_api_key_from_state
+from src.utils.math_helpers import safe_cagr
 
 class StanleyDruckenmillerSignal(BaseModel):
     signal: Literal["bullish", "bearish", "neutral"]
@@ -186,7 +187,7 @@ def analyze_growth_and_momentum(financial_line_items: list, prices: list) -> dic
         num_years = len(revenues) - 1
         if older_rev > 0 and latest_rev > 0:
             # CAGR formula: (ending_value/beginning_value)^(1/years) - 1
-            rev_growth = (latest_rev / older_rev) ** (1 / num_years) - 1
+            rev_growth = safe_cagr(older_rev, latest_rev, num_years)
             if rev_growth > 0.08:  # 8% annualized (adjusted for CAGR)
                 raw_score += 3
                 details.append(f"Strong annualized revenue growth: {rev_growth:.1%}")
@@ -214,7 +215,7 @@ def analyze_growth_and_momentum(financial_line_items: list, prices: list) -> dic
         # Calculate CAGR for positive EPS values
         if older_eps > 0 and latest_eps > 0:
             # CAGR formula for EPS
-            eps_growth = (latest_eps / older_eps) ** (1 / num_years) - 1
+            eps_growth = safe_cagr(older_eps, latest_eps, num_years)
             if eps_growth > 0.08:  # 8% annualized (adjusted for CAGR)
                 raw_score += 3
                 details.append(f"Strong annualized EPS growth: {eps_growth:.1%}")

@@ -13,6 +13,7 @@ from typing_extensions import Literal
 from src.utils.progress import progress
 from src.utils.llm import call_llm
 from src.utils.api_key import get_api_key_from_state
+from src.utils.math_helpers import safe_cagr
 
 
 class PeterLynchSignal(BaseModel):
@@ -321,7 +322,7 @@ def analyze_lynch_valuation(financial_line_items: list, market_cap: float | None
             num_years = len(eps_values) - 1
             if latest_eps > 0:
                 # CAGR formula: (ending_value/beginning_value)^(1/years) - 1
-                eps_growth_rate = (latest_eps / older_eps) ** (1 / num_years) - 1
+                eps_growth_rate = safe_cagr(older_eps, latest_eps, num_years)
             else:
                 # If latest EPS is negative, use simple average growth
                 eps_growth_rate = (latest_eps - older_eps) / (older_eps * num_years)
