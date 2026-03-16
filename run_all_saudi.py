@@ -122,6 +122,7 @@ def main():
                         ticker_signals[agent_id] = {
                             "signal": sig.get("signal"),
                             "confidence": sig.get("confidence"),
+                            "reasoning": sig.get("reasoning"),
                         }
 
                 results["signals"][ticker] = {
