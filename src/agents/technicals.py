@@ -103,34 +103,36 @@ def technical_analyst_agent(state: AgentState, agent_id: str = "technical_analys
             strategy_weights,
         )
 
-        # Generate detailed analysis report for this ticker
+        def _safe_confidence(val):
+            return round(safe_float(val, 0.5) * 100)
+
         technical_analysis[ticker] = {
             "signal": combined_signal["signal"],
-            "confidence": round(combined_signal["confidence"] * 100),
+            "confidence": _safe_confidence(combined_signal["confidence"]),
             "reasoning": {
                 "trend_following": {
                     "signal": trend_signals["signal"],
-                    "confidence": round(trend_signals["confidence"] * 100),
+                    "confidence": _safe_confidence(trend_signals["confidence"]),
                     "metrics": normalize_pandas(trend_signals["metrics"]),
                 },
                 "mean_reversion": {
                     "signal": mean_reversion_signals["signal"],
-                    "confidence": round(mean_reversion_signals["confidence"] * 100),
+                    "confidence": _safe_confidence(mean_reversion_signals["confidence"]),
                     "metrics": normalize_pandas(mean_reversion_signals["metrics"]),
                 },
                 "momentum": {
                     "signal": momentum_signals["signal"],
-                    "confidence": round(momentum_signals["confidence"] * 100),
+                    "confidence": _safe_confidence(momentum_signals["confidence"]),
                     "metrics": normalize_pandas(momentum_signals["metrics"]),
                 },
                 "volatility": {
                     "signal": volatility_signals["signal"],
-                    "confidence": round(volatility_signals["confidence"] * 100),
+                    "confidence": _safe_confidence(volatility_signals["confidence"]),
                     "metrics": normalize_pandas(volatility_signals["metrics"]),
                 },
                 "statistical_arbitrage": {
                     "signal": stat_arb_signals["signal"],
-                    "confidence": round(stat_arb_signals["confidence"] * 100),
+                    "confidence": _safe_confidence(stat_arb_signals["confidence"]),
                     "metrics": normalize_pandas(stat_arb_signals["metrics"]),
                 },
             },
@@ -341,17 +343,14 @@ def calculate_stat_arb_signals(prices_df):
     skew = returns.rolling(63).skew()
     kurt = returns.rolling(63).kurt()
 
-    # Test for mean reversion using Hurst exponent
     hurst = calculate_hurst_exponent(prices_df["close"])
+    hurst = safe_float(hurst, 0.5)
+    skew_val = safe_float(skew.iloc[-1], 0.0)
 
-    # Correlation analysis
-    # (would include correlation with related securities in real implementation)
-
-    # Generate signal based on statistical properties
-    if hurst < 0.4 and skew.iloc[-1] > 1:
+    if hurst < 0.4 and skew_val > 1:
         signal = "bullish"
         confidence = (0.5 - hurst) * 2
-    elif hurst < 0.4 and skew.iloc[-1] < -1:
+    elif hurst < 0.4 and skew_val < -1:
         signal = "bearish"
         confidence = (0.5 - hurst) * 2
     else:

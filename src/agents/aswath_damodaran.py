@@ -15,6 +15,7 @@ from src.tools.api import (
 )
 from src.utils.api_key import get_api_key_from_state
 from src.utils.llm import call_llm
+from src.utils.math_helpers import safe_cagr
 from src.utils.progress import progress
 
 
@@ -155,7 +156,7 @@ def analyze_growth_and_reinvestment(metrics: list, line_items: list) -> dict[str
     # Revenue CAGR (oldest to latest)
     revs = [m.revenue for m in reversed(metrics) if hasattr(m, "revenue") and m.revenue]
     if len(revs) >= 2 and revs[0] > 0:
-        cagr = (revs[-1] / revs[0]) ** (1 / (len(revs) - 1)) - 1
+        cagr = safe_cagr(revs[0], revs[-1], len(revs) - 1)
     else:
         cagr = None
 
@@ -302,7 +303,7 @@ def calculate_intrinsic_value_dcf(metrics: list, line_items: list, risk_analysis
     # Growth assumptions
     revs = [m.revenue for m in reversed(metrics) if m.revenue]
     if len(revs) >= 2 and revs[0] > 0:
-        base_growth = min((revs[-1] / revs[0]) ** (1 / (len(revs) - 1)) - 1, 0.12)
+        base_growth = min(safe_cagr(revs[0], revs[-1], len(revs) - 1), 0.12)
     else:
         base_growth = 0.04  # fallback
 
